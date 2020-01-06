@@ -6,7 +6,7 @@ import Persons from './components/Persons'
 import Notification from './components/Notification'
 
 
-const App = (props) => {
+const App = () => {
 
     const hook = () => {
         console.log('effect')
@@ -55,7 +55,11 @@ const App = (props) => {
         }
        
         if (exists === false) { 
-            setPersons(persons.concat(personObject))
+            personService
+            .create(personObject)
+            .then(response => {
+                setPersons(persons.concat(response.data))
+            })
             setNewName('')
             setNewNumber('')
             setMessage(
@@ -63,29 +67,29 @@ const App = (props) => {
             setTimeout(() => {
                 setMessage(null)
             }, 5000)
+           
         }
-        else if (exists === true) {
-           if( window.confirm(`${newName} is already in the phonebook, replace number with a new one?`)){
-               let id = newName;
-            personService
-            .update(id,personObject)
-            .then(hook)
-            setNewName('')
-            setNewNumber('')
-            setMessage(`${newName}'s number successfully updated to phonebook!`)
-            setTimeout(() => {
-                setMessage(null)
-            }, 5000)
-        }
-        }
-        
+       
+    const personUpdate = persons.find(person => person.name === newName)
+
+    if (exists === true) {
+      if (window.confirm(`${newName} is already in the phonebook, would you like to update the number?`)) {
+        const updatedPerson = { ...personUpdate, number: newNumber}
 
         personService
-        .create(personObject)
-        .then(response => {
-            setPersons(persons.concat(response.data))
-        })
-      
+          .update(updatedPerson.id, updatedPerson)
+          .then(result => {
+            setPersons(persons.map(person => person.id !== updatedPerson.id ? person : updatedPerson))
+            }).then(response => response.data)
+      }
+      setNewName('')
+      setNewNumber('')
+      setMessage(
+          `${newName} successfully updated to phonebook!`)
+      setTimeout(() => {
+          setMessage(null)
+      }, 5000)
+    }
     
     }
     const deletePerson= id => {
